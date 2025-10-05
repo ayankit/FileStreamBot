@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"EverythingSuckz/fsb/config"
 	"EverythingSuckz/fsb/internal/bot"
 	"EverythingSuckz/fsb/internal/utils"
 	"fmt"
@@ -34,9 +35,14 @@ func getStreamRoute(ctx *gin.Context) {
 		return
 	}
 
-	authHash := ctx.Query("hash")
-	if authHash == "" {
-		http.Error(w, "missing hash param", http.StatusBadRequest)
+	apiKey := ctx.Query("apiKey")
+	if apiKey == "" {
+		http.Error(w, "missing apiKey param", http.StatusBadRequest)
+		return
+	}
+
+	if !utils.Contains(config.ValueOf.ApiKeys, apiKey) {
+		http.Error(w, "invalid apiKey", http.StatusForbidden)
 		return
 	}
 
@@ -45,17 +51,6 @@ func getStreamRoute(ctx *gin.Context) {
 	file, err := utils.FileFromMessage(ctx, worker.Client, messageID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	expectedHash := utils.PackFile(
-		file.FileName,
-		file.FileSize,
-		file.MimeType,
-		file.ID,
-	)
-	if !utils.CheckHash(authHash, expectedHash) {
-		http.Error(w, "invalid hash", http.StatusBadRequest)
 		return
 	}
 
