@@ -37,6 +37,23 @@ func (au *allowedUsers) Decode(value string) error {
 	return nil
 }
 
+type apiKeys []string
+
+func (ak *apiKeys) Decode(value string) error {
+	if value == "" {
+		return nil
+	}
+	keys := strings.Split(string(value), ",")
+	for _, key := range keys {
+		trimmed := strings.TrimSpace(key)
+		if trimmed == "" {
+			continue
+		}
+		*ak = append(*ak, trimmed)
+	}
+	return nil
+}
+
 type config struct {
 	ApiID          int32        `envconfig:"API_ID" required:"true"`
 	ApiHash        string       `envconfig:"API_HASH" required:"true"`
@@ -50,6 +67,7 @@ type config struct {
 	UserSession    string       `envconfig:"USER_SESSION"`
 	UsePublicIP    bool         `envconfig:"USE_PUBLIC_IP" default:"false"`
 	AllowedUsers   allowedUsers `envconfig:"ALLOWED_USERS"`
+	ApiKeys        apiKeys      `envconfig:"API_KEYS"`
 	MultiTokens    []string
 }
 
