@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"encoding/json"
 
 	"github.com/celestix/gotgproto"
 	"github.com/celestix/gotgproto/ext"
@@ -44,6 +45,29 @@ func GetTGMessage(ctx context.Context, client *gotgproto.Client, messageID int) 
 	} else {
 		return nil, fmt.Errorf("this file was deleted")
 	}
+}
+
+func ParseManifest(messageText string) (*types.Manifest, error) {
+	var manifest types.Manifest
+	err := json.Unmarshal([]byte(messageText), &manifest)
+	if err != nil {
+		// If it's not JSON, it's just a regular message, not a manifest.
+		// Return a specific error to differentiate.
+		return nil, fmt.Errorf("message is not a valid JSON manifest: %w", err)
+	}
+	if len(manifest.Parts) == 0 {
+		return nil, errors.New("manifest contains no parts")
+	}
+	if manifest.TotalSize == 0 {
+		return nil, errors.New("manifest has zero total_size")
+	}
+	if manifest.FileName == "" {
+		manifest.FileName = "video.mp4" // Default filename
+	}
+	if manifest.MimeType == "" {
+		manifest.MimeType = "video/mp4" // Default MIME
+	}
+	return &manifest, nil
 }
 
 func FileFromMedia(media tg.MessageMediaClass) (*types.File, error) {

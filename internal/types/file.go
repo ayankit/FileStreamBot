@@ -24,6 +24,13 @@ type HashableFileStruct struct {
 	FileID   int64
 }
 
+type Manifest struct {
+	Parts     []int  `json:"parts"`
+	TotalSize int64  `json:"total_size"`
+	FileName  string `json:"filename"`
+	MimeType  string `json:"mime_type"`
+}
+
 func (f *HashableFileStruct) Pack() string {
 	hasher := md5.New()
 	val := reflect.ValueOf(*f)
